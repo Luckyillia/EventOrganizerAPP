@@ -1,5 +1,7 @@
 package com.example.eventorganizerapp;
 
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.database.Cursor;
@@ -25,14 +27,22 @@ public class MainActivity extends AppCompatActivity {
     private List<Event>  EventList;
 
     private EditText etEventName;
+    private TextView tvCounterEvents;
+    private final String PREFS_NAME = "AppPrefs";
+    private final String KEY_SAVED_TEXT = "DRAFT_TEXT";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
         // Inicjalizacja widoków formularza
-        etEventName     = findViewById(R.id.etEventName);
+        etEventName = findViewById(R.id.etEventName);
+        etEventName.setText(prefs.getString(KEY_SAVED_TEXT, ""));
+        // Inicjalizacja TextView
+        tvCounterEvents = findViewById(R.id.tvCounterEvents);
 
         // Inicjalizacja RecyclerView
         rvEvents  = findViewById(R.id.rvEvents);
@@ -40,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         EventList.add(new Event(0,"Spotkanie organizacyjne"));
         EventList.add(new Event(1,"Warsztaty Android"));
         EventList.add(new Event(2,"Konferencja technologiczna"));
-        adapter   = new EventAdapter(EventList);
+        adapter   = new EventAdapter(EventList,this);
         rvEvents.setAdapter(adapter);
         rvEvents.setLayoutManager(new LinearLayoutManager(this));
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(rvEvents.getContext(),
@@ -51,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
         // Listener przycisku DODAJ
         Button btnAdd = findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(v -> addEvent());
+        Button btnClear = findViewById(R.id.btnClear);
+        btnClear.setOnClickListener(v -> clearEvents());
         loadEvents();
     }
 
@@ -60,9 +72,27 @@ public class MainActivity extends AppCompatActivity {
         loadEvents();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // prefs: obiekt reprezentujacy plik z zapisanymi preferencjami aplikacji
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        // editor: "pisak" do modyfikowania danych w prefs
+        SharedPreferences.Editor editor = prefs.edit();
+
+        // Pobieramy aktualna zawartosc pola tekstowego
+        String draftText = etEventName.getText().toString();
+        // Wpisujemy wartosc do editora pod kluczem DRAFT_TEXT
+        editor.putString(KEY_SAVED_TEXT, draftText);
+
+        editor.apply();
+    }
+
     /** Wczytuje wszystkie produkty z bazy i odświeża RecyclerView. */
     private void loadEvents() {
         adapter.notifyDataSetChanged();
+        updateCounter();
     }
 
     /** Waliduje formularz, dodaje produkt do bazy i odświeża listę. */
@@ -79,5 +109,29 @@ public class MainActivity extends AppCompatActivity {
         etEventName.setText("");
 
         loadEvents();
+    }
+
+    private void clearEvents(){
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Uwaga!");
+        builder.setMessage("Czy napweno chcesz wyczyscic liste?");
+        builder.setPositiveButton("Tak", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                EventList.clear();
+                etEventName.setText("");
+                loadEvents();
+            }
+        });
+        builder.setNegativeButton("Nie", null);
+        builder.show();
+    }
+    private void updateCounter(){
+        if(EventList.isEmpty()){
+            tvCounterEvents.setText("Liczba wydarzeń: 0");
+            return;
+        }
+        tvCounterEvents.setText("Liczba wydarzeń: "+EventList.size());
     }
 }

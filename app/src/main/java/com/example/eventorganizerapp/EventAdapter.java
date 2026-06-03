@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,9 +16,11 @@ import java.util.List;
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
     private final List<Event>    eventList;
+    private final MainActivity mainActivity;
 
-    public EventAdapter(List<Event> eventList) {
-        this.eventList    = eventList;
+    public EventAdapter(List<Event> eventList, MainActivity mainActivity) {
+        this.eventList = eventList;
+        this.mainActivity = mainActivity;
     }
 
     @NonNull
@@ -34,6 +37,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         Event p = eventList.get(position);
 
         holder.tvEventName.setText(p.getEvent());
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mainActivity, "Kliknięto: "+p.getEvent(),Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
     @Override
