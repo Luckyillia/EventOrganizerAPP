@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView   rvEvents;
+    private RecyclerView rvEvents;
     private EventAdapter adapter;
     private List<Event>  EventList;
 
